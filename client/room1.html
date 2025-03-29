@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Room 1 - Sender</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+        }
+        .room {
+            background-color: white;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            width: 300px;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+        }
+        button {
+            width: 100%;
+            padding: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="room">
+        <h2>Room 1</h2>
+        <input type="text" id="notification-input" placeholder="Enter notification">
+        <button id="send-btn">Send Notification</button>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io('http://localhost:3000');
+        const notificationInput = document.getElementById('notification-input');
+        const sendBtn = document.getElementById('send-btn');
+
+        // Join Room 1
+        socket.emit('join-room', 'room1');
+
+        // Send notification from Room 1
+        sendBtn.addEventListener('click', () => {
+            const message = notificationInput.value.trim();
+            if (message) {
+                socket.emit('send-notification', { 
+                    message, 
+                    timestamp: new Date().toLocaleString() 
+                });
+                notificationInput.value = '';
+            }
+        });
+    </script>
+</body>
+</html>

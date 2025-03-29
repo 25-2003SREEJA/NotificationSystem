@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Room 2 - Notification System</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+        }
+        .room {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            width: 400px;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        .notification {
+            background-color: #f1f1f1;
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="room">
+        <h2>Room 2</h2>
+        <div id="notifications-container"></div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io('http://localhost:3000');
+        const notificationsContainer = document.getElementById('notifications-container');
+        
+        // Notification tracking
+        let notificationCount = 0;
+        const originalTitle = document.title;
+
+        // Request notification permission
+        if (!("Notification" in window)) {
+            alert("This browser does not support desktop notification");
+        } else if (Notification.permission !== "granted") {
+            Notification.requestPermission();
+        }
+
+        // Join Room 2
+        socket.emit('join-room', 'room2');
+
+        // Receive notification in Room 2
+        socket.on('receive-notification', (data) => {
+            // Increment notification count
+            notificationCount++;
+
+            // Update document title with notification count and "new notifications"
+            document.title = `(${notificationCount} new notifications) Room 2 - Notification System`;
+
+            // Create notification element
+            const notificationElement = document.createElement('div');
+            notificationElement.classList.add('notification');
+            notificationElement.innerHTML = `
+                <p>${data.message}</p>
+                <small>${data.timestamp}</small>
+            `;
+            notificationsContainer.prepend(notificationElement);
+
+            // Browser notification
+            if (Notification.permission === "granted") {
+                new Notification('New Notification', {
+                    body: data.message
+                });
+            }
+        });
+
+        // Reset title and notification count when tab becomes visible
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden) {
+                document.title = originalTitle;
+                notificationCount = 0;
+            }
+        });
+    </script>
+</body>
+</html>
