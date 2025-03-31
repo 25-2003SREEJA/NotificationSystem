@@ -1,10 +1,10 @@
 const socket = io();
 
-
-const room = window.location.pathname.includes("room2") ? "room2" : "room1";
+// Dynamically determine the room based on URL
+const room = window.location.pathname.split("/").pop() || "room1";
 socket.emit("join-room", room);
 
-
+// Request Notification Permission
 if ("Notification" in window) {
     Notification.requestPermission().then((permission) => {
         if (permission !== "granted") {
@@ -13,16 +13,16 @@ if ("Notification" in window) {
     });
 }
 
-
+// Load saved notifications for the current room
 function loadSavedNotifications() {
-    const savedNotifications = localStorage.getItem("room2Notifications");
+    const savedNotifications = localStorage.getItem(`${room}Notifications`);
     return savedNotifications ? JSON.parse(savedNotifications) : [];
 }
 
-
+// Display notifications on UI
 function displayNotifications() {
     const container = document.getElementById("notifications-container");
-    container.innerHTML = ""; // Clear previous content
+    container.innerHTML = ""; 
     const notifications = loadSavedNotifications();
     
     notifications.forEach((notification) => {
@@ -33,21 +33,21 @@ function displayNotifications() {
     });
 }
 
-
+// Save new notification
 function saveNotification(data) {
     let notifications = loadSavedNotifications();
     notifications.push(data);
-    localStorage.setItem("room2Notifications", JSON.stringify(notifications));
+    localStorage.setItem(`${room}Notifications`, JSON.stringify(notifications));
 }
 
-
+// Receive notification from server
 socket.on("receive-notification", (data) => {
     saveNotification(data);
     displayNotification(data.message);
-    showPopupNotification(data.message); 
+    showPopupNotification(data.message);
 });
 
-
+// Display notification in UI
 function displayNotification(message) {
     const container = document.getElementById("notifications-container");
     const div = document.createElement("div");
@@ -56,15 +56,15 @@ function displayNotification(message) {
     container.appendChild(div);
 }
 
-
+// Show browser popup notification
 function showPopupNotification(message) {
     if (Notification.permission === "granted") {
         new Notification("New Notification", {
             body: message,
-            icon: "/notification-icon.png" 
+            icon: "/notification-icon.png"
         });
     }
 }
 
-
+// Load existing notifications on page load
 displayNotifications();
